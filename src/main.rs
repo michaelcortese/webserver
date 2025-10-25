@@ -20,7 +20,7 @@ impl HttpResponse {
     fn from(route: String) -> Self {
         Self {
             res_type: HttpResponseType::Processing,
-            route: route,
+            route,
         }
     }
 
@@ -41,7 +41,7 @@ impl HttpResponse {
              Content-Type: text/html; charset=utf-8\r\n\
              Connection: close\r\n\
              \r\n{}",
-                &page.as_bytes().len(),
+                &page.len(),
                 page
             ),
             HttpResponseType::Ok => format!(
@@ -50,7 +50,7 @@ impl HttpResponse {
              Content-Type: text/html; charset=utf-8\r\n\
              Connection: close\r\n\
              \r\n{}",
-                &page.as_bytes().len(),
+                &page.len(),
                 page
             ),
             _ => format!(
@@ -59,7 +59,7 @@ impl HttpResponse {
              Content-Type: text/html; charset=utf-8\r\n\
              Connection: close\r\n\
              \r\n{}",
-                &page.as_bytes().len(),
+                &page.len(),
                 page
             ),
         }
@@ -89,7 +89,7 @@ fn main() -> std::io::Result<()> {
 
 fn handle_connection(connection: &mut TcpStream) -> std::io::Result<()> {
     let mut buffer = [0; 1024];
-    connection.read(&mut buffer).unwrap();
+    connection.read_exact(&mut buffer).unwrap();
     let request = String::from_utf8_lossy(&buffer);
 
     let mut res = request.lines().next().unwrap_or("").split_whitespace();
@@ -100,7 +100,7 @@ fn handle_connection(connection: &mut TcpStream) -> std::io::Result<()> {
                 let mut http_res = HttpResponse::from({
                     let mut route = res.next().unwrap_or("404.html");
                     route = route.trim_start_matches("/");
-                    if route == "" {
+                    if route.is_empty() {
                         route = "index.html"
                     }
                     format!("www/{}", route)
